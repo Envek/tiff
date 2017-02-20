@@ -12,6 +12,8 @@ module Tiff
       @mode = mode
 
       @fd = Bindings::open path, mode
+      @multipage = Bindings.last_directory(@fd).zero? # Just for inspect
+      @page = page
     end
 
     def close
@@ -36,6 +38,34 @@ module Tiff
     # Writes raw data to the image.
     def data=(data)
       Bindings::write_raw_strip fd, 0, data, data.length
+    end
+
+    # Iterates over subfiles in multipage TIFF
+    # WARNING: This function changes internal state while iterating
+    # @return [Enumerator, nil]
+    def each
+      return enum_for(:each) unless block_given?
+      page_before = page
+      self.page = 0
+      loop do
+        yield self
+        break if (@page = Bindings.read_directory(@fd)).zero?
+      end
+      self.page = page_before
+      nil
+    end
+
+    # Returns current subfile index in multipage TIFFs (always 0 in single page)
+    # @return [Integer] Current subfile index
+    def page
+      @page ||= Bindings.current_directory(@fd)
+    end
+
+    # Switches to subfile with index +value+
+    # @param value [Integer] New subfile index
+    # @return      [Integer] New subfile index
+    def page=(value)
+      @page = Bindings.set_directory(@fd, value)
     end
 
     # Sets a field on the image, using the list of tags in

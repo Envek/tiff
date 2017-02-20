@@ -25,6 +25,18 @@ module Tiff
     attach_function :read_rgba, :TIFFReadRGBAImageOriented,
       [:pointer, :uint32, :uint32, :buffer_out, :int, :int], :int
 
+    attach_function :current_directory, :TIFFCurrentDirectory,
+      [:pointer], :uint16
+
+    attach_function :last_directory, :TIFFLastDirectory,
+      [:pointer], :int
+
+    attach_function :set_directory, :TIFFSetDirectory,
+      [:pointer, :uint16], :int
+
+    attach_function :read_directory, :TIFFReadDirectory,
+      [:pointer], :int
+
     # Auxiliary functions for crossplatform memory management
     attach_function :tiff_malloc, :_TIFFmalloc,
       [:size_t], :pointer
